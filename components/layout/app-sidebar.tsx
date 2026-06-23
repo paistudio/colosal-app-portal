@@ -44,8 +44,8 @@ export function AppSidebar() {
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground pl-2",
-            collapsed && "mx-auto"
+            "flex items-center gap-3 rounded-md px-2 py-2 ml-4 text-sm font-medium transition-colors",
+            collapsed && "mx-auto ml-0"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
