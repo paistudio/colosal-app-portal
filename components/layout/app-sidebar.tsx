@@ -30,21 +30,21 @@ export function AppSidebar() {
   return (
     <aside
       className={cn(
-        "flex shrink-0 flex-col rounded-xl border bg-background shadow-sm transition-all duration-200",
+        "flex shrink-0 flex-col rounded-xl shadow-sm transition-all duration-200",
         collapsed ? "w-14" : "w-56"
       )}
     >
       {/* Logo row */}
-      <div className="flex h-14 items-center justify-between border-b px-3">
+      <div className="flex h-14 items-center justify-between px-3">
         {!collapsed && (
-          <div className="pl-2">
+          <div className="pl-0">
             <Logo />
           </div>
         )}
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground pl-2",
             collapsed && "mx-auto"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
