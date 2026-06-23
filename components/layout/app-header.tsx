@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -13,6 +13,12 @@ import {
 import { LogOut, Settings } from "lucide-react"
 import Link from "next/link"
 
+const PAGE_TITLES: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/proposals": "Proposals",
+  "/settings": "Settings",
+}
+
 interface AppHeaderProps {
   username?: string | null
   email?: string | null
@@ -20,6 +26,9 @@ interface AppHeaderProps {
 
 export function AppHeader({ username, email }: AppHeaderProps) {
   const router = useRouter()
+  const pathname = usePathname()
+  const pageTitle = PAGE_TITLES[pathname] ?? "Colosal"
+
   const initials = username
     ? username.slice(0, 2).toUpperCase()
     : email?.slice(0, 2).toUpperCase() ?? "?"
@@ -33,7 +42,7 @@ export function AppHeader({ username, email }: AppHeaderProps) {
 
   return (
     <header className="flex h-14 items-center justify-between border-b bg-background px-6">
-      <div />
+      <h1 className="text-lg font-semibold">{pageTitle}</h1>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">

@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { Logo } from "@/components/logo"
 
 export default function SignupPage() {
   const router = useRouter()
@@ -77,7 +78,11 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-sm">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="flex justify-center">
+          <Logo />
+        </div>
+      <Card className="w-full">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Create your account</CardTitle>
           <CardDescription>Start building your Colosal profile</CardDescription>
@@ -153,6 +158,7 @@ export default function SignupPage() {
           </p>
         </CardFooter>
       </Card>
+      </div>
     </div>
   )
 }
