@@ -15,6 +15,7 @@ import Link from "next/link"
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
+  "/job-scanner": "Job Scanner",
   "/proposals": "Proposals",
   "/settings": "Settings",
 }
@@ -27,7 +28,12 @@ interface AppHeaderProps {
 export function AppHeader({ username, email }: AppHeaderProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const pageTitle = PAGE_TITLES[pathname] ?? "Colosal"
+  const pageTitle =
+    PAGE_TITLES[pathname] ??
+    PAGE_TITLES[
+      Object.keys(PAGE_TITLES).find((p) => p !== "/dashboard" && pathname.startsWith(p)) ?? ""
+    ] ??
+    "Colosal"
 
   const initials = username
     ? username.slice(0, 2).toUpperCase()
