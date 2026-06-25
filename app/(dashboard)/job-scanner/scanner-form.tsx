@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import { ArrowLeft, ArrowRight, Check, Sparkles, Loader2, Paperclip } from "lucide-react"
+import { SkillTagInput } from "./skill-tag-input"
 
 const STEPS = ["Filters", "Cover Letter", "Questions", "Attachments", "Notifications"] as const
 
@@ -160,7 +161,6 @@ export function ScannerForm({ initial }: { initial?: ScanConfig }) {
 
   const [step, setStep] = useState(0)
   const [config, setConfig] = useState<ScanConfig>({ ...EMPTY_CONFIG, ...initial })
-  const [skillsInput, setSkillsInput] = useState((initial?.skills ?? []).join(", "))
   const [saving, setSaving] = useState(false)
 
   const [jobs, setJobs] = useState<JobOption[]>([])
@@ -241,11 +241,6 @@ export function ScannerForm({ initial }: { initial?: ScanConfig }) {
       return
     }
 
-    const skills = skillsInput
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-
     const payload = {
       user_id: userData.user.id,
       name: config.name,
@@ -255,7 +250,7 @@ export function ScannerForm({ initial }: { initial?: ScanConfig }) {
       budget_max: config.budget_max,
       hourly_rate_min: config.hourly_rate_min,
       hourly_rate_max: config.hourly_rate_max,
-      skills,
+      skills: config.skills ?? [],
       experience_level: config.experience_level || null,
       category: config.category || null,
       client_hire_rate: config.client_hire_rate ?? 0,
@@ -417,10 +412,9 @@ export function ScannerForm({ initial }: { initial?: ScanConfig }) {
 
             <div className="space-y-1.5">
               <Label>Skill</Label>
-              <Input
-                placeholder="Input skills, separated by commas"
-                value={skillsInput}
-                onChange={(e) => setSkillsInput(e.target.value)}
+              <SkillTagInput
+                value={config.skills ?? []}
+                onChange={(v) => set("skills", v)}
               />
             </div>
 
