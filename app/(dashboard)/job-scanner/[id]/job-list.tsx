@@ -124,25 +124,31 @@ export function JobList({
 
       {totalPages > 1 ? (
         <div className="flex items-center justify-between pt-2">
-          <Button asChild variant="outline" size="sm" disabled={page <= 1}>
-            <Link
-              href={`/job-scanner/${scanConfigId}?tab=${activeTab}&page=${page - 1}`}
-              aria-disabled={page <= 1}
-            >
+          {page > 1 ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/job-scanner/${scanConfigId}?tab=${activeTab}&page=${page - 1}`}>
+                Previous
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
               Previous
-            </Link>
-          </Button>
+            </Button>
+          )}
           <span className="text-sm text-muted-foreground">
             Page {page} of {totalPages}
           </span>
-          <Button asChild variant="outline" size="sm" disabled={page >= totalPages}>
-            <Link
-              href={`/job-scanner/${scanConfigId}?tab=${activeTab}&page=${page + 1}`}
-              aria-disabled={page >= totalPages}
-            >
+          {page < totalPages ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/job-scanner/${scanConfigId}?tab=${activeTab}&page=${page + 1}`}>
+                Next
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
               Next
-            </Link>
-          </Button>
+            </Button>
+          )}
         </div>
       ) : null}
     </div>
