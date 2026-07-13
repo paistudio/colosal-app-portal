@@ -20,7 +20,7 @@ export interface ScannerItem {
   totalCount: number
 }
 
-function timeAgo(iso: string | null): string {
+export function timeAgo(iso: string | null): string {
   if (!iso) return "never"
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60000)
@@ -32,7 +32,7 @@ function timeAgo(iso: string | null): string {
   return `${days} day${days === 1 ? "" : "s"} ago`
 }
 
-const STATUS_STYLES: Record<string, string> = {
+export const STATUS_STYLES: Record<string, string> = {
   Active: "bg-emerald-500/10 text-emerald-500",
   Inactive: "bg-muted text-muted-foreground",
   Draft: "bg-amber-500/10 text-amber-500",
