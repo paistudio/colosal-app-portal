@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Mail, MessageCircle, Pencil } from "lucide-react"
-import { STATUS_STYLES } from "../scanner-list"
+import { STATUS_STYLES } from "../scanner-format"
 
 export interface ScanConfigDetail {
   id: string

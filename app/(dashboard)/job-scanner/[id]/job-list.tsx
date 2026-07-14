@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Briefcase } from "lucide-react"
-import { timeAgo } from "../scanner-list"
+import { timeAgo } from "../scanner-format"
 
 export type ApplyStatusTab = "All" | "New" | "Applied" | "Dismissed"
 
