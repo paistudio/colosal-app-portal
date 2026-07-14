@@ -35,7 +35,10 @@ export default async function EditScannerPage({
             const preferredLabel = obj?.preferredLabel ?? obj?.label ?? ""
             return preferredLabel ? { id: obj?.id ?? "", preferredLabel } : null
           })
-          .filter((s): s is { id: string; preferredLabel: string } => s !== null)
+          .filter(
+            (s: { id: string; preferredLabel: string } | null): s is { id: string; preferredLabel: string } =>
+              s !== null
+          )
       : [],
     experience_level: config.experience_level,
     category: config.category,
