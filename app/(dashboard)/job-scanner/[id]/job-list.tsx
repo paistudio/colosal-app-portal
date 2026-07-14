@@ -156,33 +156,28 @@ export function JobList({
                   </div>
                 )}
                 <div className="min-w-0 flex-1 space-y-2">
-                  <div className="flex items-start justify-between gap-3">
-                    {jobUrl ? (
-                      <a
-                        href={jobUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="min-w-0 flex-1 truncate font-heading font-medium hover:underline"
-                      >
-                        {job.title ?? "Untitled job"}
-                      </a>
-                    ) : (
-                      <p className="min-w-0 flex-1 truncate font-heading font-medium">
-                        {job.title ?? "Untitled job"}
-                      </p>
-                    )}
+                  {jobUrl ? (
+                    <a
+                      href={jobUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block truncate font-heading font-medium hover:underline"
+                    >
+                      {job.title ?? "Untitled job"}
+                    </a>
+                  ) : (
+                    <p className="truncate font-heading font-medium">{job.title ?? "Untitled job"}</p>
+                  )}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span>{formatAmount(job)}</span>
+                    <span>Scanned {timeAgo(job.inserted_at)}</span>
                     <Badge
                       className={cn(
-                        "shrink-0",
                         APPLY_STATUS_STYLES[job.apply_status ?? ""] ?? APPLY_STATUS_STYLES.Dismissed
                       )}
                     >
                       {job.apply_status ?? "New"}
                     </Badge>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    <span>{formatAmount(job)}</span>
-                    <span>Scanned {timeAgo(job.inserted_at)}</span>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
