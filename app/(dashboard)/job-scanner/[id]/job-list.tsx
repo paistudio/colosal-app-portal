@@ -10,6 +10,7 @@ export type ApplyStatusTab = "All" | "New" | "Applied" | "Dismissed"
 export interface JobRow {
   id: string
   title: string | null
+  url: string | null
   contract_type: string | null
   fixed_price_amount: number | null
   fixed_price_currency: string | null
@@ -49,6 +50,12 @@ function formatAmount(job: JobRow): string {
   const fmt = (n: number) => `$${new Intl.NumberFormat("en-US").format(n)}`
   if (min !== null && max !== null) return `${fmt(min)} - ${fmt(max)}/hr`
   return `${fmt(min ?? max ?? 0)}/hr`
+}
+
+function matchScoreStyle(score: number): string {
+  if (score >= 80) return "bg-emerald-500/10 text-emerald-500"
+  if (score >= 50) return "bg-amber-500/10 text-amber-500"
+  return "bg-rose-500/10 text-rose-500"
 }
 
 function tabHref(scanConfigId: string, tab: ApplyStatusTab): string {
@@ -94,31 +101,55 @@ export function JobList({
         </div>
       ) : (
         <div className="space-y-3">
-          {jobs.map((job) => (
-            <div
-              key={job.id}
-              className="space-y-2 rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <p className="min-w-0 flex-1 truncate font-heading font-medium">
-                  {job.title ?? "Untitled job"}
-                </p>
-                <Badge
-                  className={cn(
-                    "shrink-0",
-                    APPLY_STATUS_STYLES[job.apply_status ?? ""] ?? APPLY_STATUS_STYLES.Dismissed
-                  )}
-                >
-                  {job.apply_status ?? "New"}
-                </Badge>
+          {jobs.map((job) => {
+            const cardClassName = cn(
+              "block space-y-2 rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/5 transition-shadow dark:ring-foreground/10",
+              job.url && "hover:shadow-md"
+            )
+            const cardContent = (
+              <>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="min-w-0 flex-1 truncate font-heading font-medium">
+                    {job.title ?? "Untitled job"}
+                  </p>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {job.score_matching !== null ? (
+                      <Badge className={matchScoreStyle(job.score_matching)}>
+                        {job.score_matching}% match
+                      </Badge>
+                    ) : null}
+                    <Badge
+                      className={cn(
+                        APPLY_STATUS_STYLES[job.apply_status ?? ""] ?? APPLY_STATUS_STYLES.Dismissed
+                      )}
+                    >
+                      {job.apply_status ?? "New"}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span>{formatAmount(job)}</span>
+                  <span>Scanned {timeAgo(job.inserted_at)}</span>
+                </div>
+              </>
+            )
+
+            return job.url ? (
+              <a
+                key={job.id}
+                href={job.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cardClassName}
+              >
+                {cardContent}
+              </a>
+            ) : (
+              <div key={job.id} className={cardClassName}>
+                {cardContent}
               </div>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                <span>{formatAmount(job)}</span>
-                <span>Scanned {timeAgo(job.inserted_at)}</span>
-                {job.score_matching !== null ? <span>Match {job.score_matching}%</span> : null}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

@@ -65,7 +65,7 @@ export default async function ScannerDetailPage({
   let jobsQuery = supabase
     .from("upwork_jobs")
     .select(
-      "id, title, contract_type, fixed_price_amount, fixed_price_currency, hourly_budget_min, hourly_budget_max, inserted_at, score_matching, apply_status"
+      "id, title, url, contract_type, fixed_price_amount, fixed_price_currency, hourly_budget_min, hourly_budget_max, inserted_at, score_matching, apply_status"
     )
     .eq("scan_config_id", id)
     .order("inserted_at", { ascending: false })
