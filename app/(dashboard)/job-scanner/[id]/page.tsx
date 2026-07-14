@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { fetchUpworkCategories } from "@/lib/upwork/categories"
 import { Button } from "@/components/ui/button"
 import { ConfigSummary, type ScanConfigDetail } from "./config-summary"
-import { JobList, type ApplyStatusTab, type JobRow } from "./job-list"
+import { JobList, JobListTabs, type ApplyStatusTab, type JobRow } from "./job-list"
 
 const PAGE_SIZE = 20
 const TABS: ApplyStatusTab[] = ["All", "New", "Applied", "Dismissed"]
@@ -132,25 +132,25 @@ export default async function ScannerDetailPage({
 
   return (
     <div className="-m-6">
-      <div className="sticky top-0 z-20 flex h-28 flex-col justify-center gap-1 bg-background px-6 pt-6 will-change-transform">
+      <div className="sticky top-0 z-20 flex h-40 flex-col justify-center gap-2 bg-background px-6 pt-6 will-change-transform">
         <div className="mx-auto w-full max-w-6xl">
           <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit gap-1">
             <Link href="/job-scanner">
               <ArrowLeft className="h-4 w-4" /> Back to Job Scanner
             </Link>
           </Button>
-          <h1 className="font-heading text-3xl font-semibold">Scanner Detail</h1>
+          <h1 className="mb-2 font-heading text-3xl font-semibold">Scanner Detail</h1>
+          <JobListTabs scanConfigId={id} counts={counts} activeTab={activeTab} />
         </div>
       </div>
       <div className="mx-auto max-w-6xl px-6 pb-6">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
-          <div className="lg:sticky lg:top-28 lg:self-start">
+          <div className="lg:sticky lg:top-40 lg:self-start">
             <ConfigSummary config={configDetail} />
           </div>
           <JobList
             scanConfigId={id}
             jobs={(jobRows ?? []) as JobRow[]}
-            counts={counts}
             activeTab={activeTab}
             page={clampedPage}
             pageSize={PAGE_SIZE}

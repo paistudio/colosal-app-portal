@@ -30,7 +30,6 @@ export interface JobRow {
 export interface JobListProps {
   scanConfigId: string
   jobs: JobRow[]
-  counts: Record<ApplyStatusTab, number>
   activeTab: ApplyStatusTab
   page: number
   pageSize: number
@@ -75,10 +74,38 @@ function tabHref(scanConfigId: string, tab: ApplyStatusTab): string {
     : `/job-scanner/${scanConfigId}?tab=${tab}`
 }
 
+export function JobListTabs({
+  scanConfigId,
+  counts,
+  activeTab,
+}: {
+  scanConfigId: string
+  counts: Record<ApplyStatusTab, number>
+  activeTab: ApplyStatusTab
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {TABS.map((tab) => (
+        <Link
+          key={tab}
+          href={tabHref(scanConfigId, tab)}
+          className={cn(
+            "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+            tab === activeTab
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/70"
+          )}
+        >
+          {tab} ({counts[tab]})
+        </Link>
+      ))}
+    </div>
+  )
+}
+
 export function JobList({
   scanConfigId,
   jobs,
-  counts,
   activeTab,
   page,
   pageSize,
@@ -104,23 +131,6 @@ export function JobList({
 
   return (
     <div className="space-y-4">
-      <div className="sticky top-28 z-10 flex flex-wrap gap-2 bg-background py-2 will-change-transform">
-        {TABS.map((tab) => (
-          <Link
-            key={tab}
-            href={tabHref(scanConfigId, tab)}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
-              tab === activeTab
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/70"
-            )}
-          >
-            {tab} ({counts[tab]})
-          </Link>
-        ))}
-      </div>
-
       {jobs.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border py-20 text-center">
           <Briefcase className="h-8 w-8 text-muted-foreground" />
