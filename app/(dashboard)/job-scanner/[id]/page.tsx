@@ -59,6 +59,9 @@ export default async function ScannerDetailPage({
     Dismissed: dismissedCount.count ?? 0,
   }
 
+  const totalPages = Math.max(1, Math.ceil(counts[activeTab] / PAGE_SIZE))
+  const clampedPage = Math.min(page, totalPages)
+
   let jobsQuery = supabase
     .from("upwork_jobs")
     .select(
@@ -66,7 +69,7 @@ export default async function ScannerDetailPage({
     )
     .eq("scan_config_id", id)
     .order("inserted_at", { ascending: false })
-    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+    .range((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE - 1)
 
   if (activeTab !== "All") {
     jobsQuery = jobsQuery.eq("apply_status", activeTab)
@@ -108,7 +111,7 @@ export default async function ScannerDetailPage({
           jobs={(jobRows ?? []) as JobRow[]}
           counts={counts}
           activeTab={activeTab}
-          page={page}
+          page={clampedPage}
           pageSize={PAGE_SIZE}
           activeTabTotal={counts[activeTab]}
         />
