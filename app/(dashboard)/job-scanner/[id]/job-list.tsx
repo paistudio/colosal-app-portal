@@ -104,7 +104,7 @@ export function JobList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
+      <div className="sticky top-24 z-10 flex flex-wrap gap-2 bg-background py-2">
         {TABS.map((tab) => (
           <Link
             key={tab}
