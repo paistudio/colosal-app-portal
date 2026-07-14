@@ -1,8 +1,14 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Briefcase } from "lucide-react"
+import { Briefcase, Check, Loader2, X } from "lucide-react"
+import { toast } from "sonner"
 import { timeAgo } from "../scanner-format"
 
 export type ApplyStatusTab = "All" | "New" | "Applied" | "Dismissed"
@@ -78,7 +84,23 @@ export function JobList({
   pageSize,
   activeTabTotal,
 }: JobListProps) {
+  const router = useRouter()
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
   const totalPages = Math.max(1, Math.ceil(activeTabTotal / pageSize))
+
+  async function updateStatus(jobId: string, status: "Applied" | "Dismissed") {
+    setUpdatingId(jobId)
+    const supabase = createClient()
+    const { error } = await supabase.from("upwork_jobs").update({ apply_status: status }).eq("id", jobId)
+    if (error) {
+      toast.error(error.message)
+      setUpdatingId(null)
+      return
+    }
+    toast.success(status === "Applied" ? "Marked as applied" : "Job dismissed")
+    setUpdatingId(null)
+    router.refresh()
+  }
 
   return (
     <div className="space-y-4">
@@ -108,12 +130,13 @@ export function JobList({
         <div className="space-y-3">
           {jobs.map((job) => {
             const jobUrl = safeJobUrl(job.url)
-            const cardClassName = cn(
-              "flex items-center gap-4 rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/5 transition-shadow dark:ring-foreground/10",
-              jobUrl && "hover:shadow-md"
-            )
-            const cardContent = (
-              <>
+            const isUpdating = updatingId === job.id
+
+            return (
+              <div
+                key={job.id}
+                className="flex items-center gap-4 rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10"
+              >
                 {job.score_matching !== null ? (
                   <div
                     className={cn(
@@ -134,9 +157,20 @@ export function JobList({
                 )}
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="min-w-0 flex-1 truncate font-heading font-medium">
-                      {job.title ?? "Untitled job"}
-                    </p>
+                    {jobUrl ? (
+                      <a
+                        href={jobUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="min-w-0 flex-1 truncate font-heading font-medium hover:underline"
+                      >
+                        {job.title ?? "Untitled job"}
+                      </a>
+                    ) : (
+                      <p className="min-w-0 flex-1 truncate font-heading font-medium">
+                        {job.title ?? "Untitled job"}
+                      </p>
+                    )}
                     <Badge
                       className={cn(
                         "shrink-0",
@@ -151,22 +185,28 @@ export function JobList({
                     <span>Scanned {timeAgo(job.inserted_at)}</span>
                   </div>
                 </div>
-              </>
-            )
-
-            return jobUrl ? (
-              <a
-                key={job.id}
-                href={jobUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cardClassName}
-              >
-                {cardContent}
-              </a>
-            ) : (
-              <div key={job.id} className={cardClassName}>
-                {cardContent}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Mark as applied"
+                    disabled={isUpdating || job.apply_status === "Applied"}
+                    onClick={() => updateStatus(job.id, "Applied")}
+                    className="text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600"
+                  >
+                    {isUpdating ? <Loader2 className="animate-spin" /> : <Check />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Dismiss job"
+                    disabled={isUpdating || job.apply_status === "Dismissed"}
+                    onClick={() => updateStatus(job.id, "Dismissed")}
+                    className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
+                  >
+                    {isUpdating ? <Loader2 className="animate-spin" /> : <X />}
+                  </Button>
+                </div>
               </div>
             )
           })}
