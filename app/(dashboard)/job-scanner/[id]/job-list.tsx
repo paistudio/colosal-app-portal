@@ -52,6 +52,11 @@ function formatAmount(job: JobRow): string {
   return `${fmt(min ?? max ?? 0)}/hr`
 }
 
+function safeJobUrl(url: string | null): string | null {
+  if (!url) return null
+  return /^https?:\/\//i.test(url) ? url : null
+}
+
 function matchScoreStyle(score: number): string {
   if (score >= 80) return "bg-emerald-500/10 text-emerald-500"
   if (score >= 50) return "bg-amber-500/10 text-amber-500"
@@ -102,9 +107,10 @@ export function JobList({
       ) : (
         <div className="space-y-3">
           {jobs.map((job) => {
+            const jobUrl = safeJobUrl(job.url)
             const cardClassName = cn(
               "block space-y-2 rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/5 transition-shadow dark:ring-foreground/10",
-              job.url && "hover:shadow-md"
+              jobUrl && "hover:shadow-md"
             )
             const cardContent = (
               <>
@@ -134,10 +140,10 @@ export function JobList({
               </>
             )
 
-            return job.url ? (
+            return jobUrl ? (
               <a
                 key={job.id}
-                href={job.url}
+                href={jobUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cardClassName}
