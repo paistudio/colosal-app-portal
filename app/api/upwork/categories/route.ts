@@ -1,11 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
-import { fetchUpworkWithAuth } from "@/lib/upwork/token"
+import { fetchUpworkCategories } from "@/lib/upwork/categories"
 import { NextResponse } from "next/server"
-
-const BROWSER_UA =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-
-const QUERY = `query { ontologyCategories { id preferredLabel slug subcategories { id preferredLabel } } }`
 
 export async function GET() {
   const supabase = await createClient()
@@ -24,31 +19,12 @@ export async function GET() {
     return NextResponse.json({ error: "Upwork not connected" }, { status: 400 })
   }
 
-  const res = await fetchUpworkWithAuth(
+  const categories = await fetchUpworkCategories(
     supabase,
     user.id,
     profile.access_token,
-    profile.refresh_token,
-    (token) =>
-      fetch("https://api.upwork.com/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "User-Agent": BROWSER_UA,
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ query: QUERY }),
-      })
+    profile.refresh_token
   )
 
-  const json = await res.json().catch(() => null)
-
-  if (!res.ok || json?.errors) {
-    console.error("Upwork categories fetch failed", res.status, JSON.stringify(json?.errors))
-    return NextResponse.json({ error: "Failed to fetch categories" }, { status: 502 })
-  }
-
-  const categories = json?.data?.ontologyCategories ?? []
   return NextResponse.json({ categories })
 }

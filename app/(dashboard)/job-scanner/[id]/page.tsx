@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { fetchUpworkCategories } from "@/lib/upwork/categories"
 import { ConfigSummary, type ScanConfigDetail } from "./config-summary"
 import { JobList, type ApplyStatusTab, type JobRow } from "./job-list"
 
@@ -30,6 +31,33 @@ export default async function ScannerDetailPage({
     .single()
 
   if (!config) notFound()
+
+  let categoryLabel: string | null = config.category
+  if (config.category) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    const { data: profile } = user
+      ? await supabase
+          .from("user_profiles")
+          .select("access_token, refresh_token")
+          .eq("user_id", user.id)
+          .single()
+      : { data: null }
+
+    if (user && profile?.access_token) {
+      const categories = await fetchUpworkCategories(
+        supabase,
+        user.id,
+        profile.access_token,
+        profile.refresh_token
+      )
+      const match = categories
+        .flatMap((cat) => cat.subcategories)
+        .find((sub) => sub.id === config.category)
+      if (match) categoryLabel = match.preferredLabel
+    }
+  }
 
   const baseQuery = supabase.from("upwork_jobs").select("id", { count: "exact", head: true }).eq("scan_config_id", id)
 
@@ -82,7 +110,7 @@ export default async function ScannerDetailPage({
     name: config.name,
     status: config.status,
     keyword: config.keyword,
-    category: config.category,
+    category: categoryLabel,
     experience_level: config.experience_level,
     contract_type: config.contract_type,
     budget_min: config.budget_min,
