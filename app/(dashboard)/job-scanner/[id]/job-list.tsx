@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Briefcase, Check, Loader2, X } from "lucide-react"
+import { Briefcase, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { timeAgo } from "../scanner-format"
 
@@ -183,23 +183,21 @@ export function JobList({
                 <div className="flex shrink-0 items-center gap-1.5">
                   <Button
                     variant="outline"
-                    size="icon"
-                    aria-label="Mark as applied"
+                    size="sm"
                     disabled={isUpdating || job.apply_status === "Applied"}
                     onClick={() => updateStatus(job.id, "Applied")}
                     className="text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600"
                   >
-                    {isUpdating ? <Loader2 className="animate-spin" /> : <Check />}
+                    {isUpdating ? <Loader2 className="animate-spin" /> : "Apply"}
                   </Button>
                   <Button
                     variant="outline"
-                    size="icon"
-                    aria-label="Dismiss job"
+                    size="sm"
                     disabled={isUpdating || job.apply_status === "Dismissed"}
                     onClick={() => updateStatus(job.id, "Dismissed")}
                     className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
                   >
-                    {isUpdating ? <Loader2 className="animate-spin" /> : <X />}
+                    {isUpdating ? <Loader2 className="animate-spin" /> : "Dismiss"}
                   </Button>
                 </div>
               </div>
