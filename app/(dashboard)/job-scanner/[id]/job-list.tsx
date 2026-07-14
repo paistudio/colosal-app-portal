@@ -135,7 +135,7 @@ export function JobList({
             return (
               <div
                 key={job.id}
-                className="flex items-center gap-4 rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10"
+                className="flex max-w-3xl items-center gap-4 rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10"
               >
                 {job.score_matching !== null ? (
                   <div
