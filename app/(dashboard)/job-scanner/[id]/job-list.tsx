@@ -58,9 +58,9 @@ function safeJobUrl(url: string | null): string | null {
 }
 
 function matchScoreStyle(score: number): string {
-  if (score >= 80) return "bg-emerald-500/10 text-emerald-500"
-  if (score >= 50) return "bg-amber-500/10 text-amber-500"
-  return "bg-rose-500/10 text-rose-500"
+  if (score >= 80) return "bg-emerald-500/15 text-emerald-500"
+  if (score >= 50) return "bg-amber-500/15 text-amber-500"
+  return "bg-rose-500/15 text-rose-500"
 }
 
 function tabHref(scanConfigId: string, tab: ApplyStatusTab): string {
@@ -109,33 +109,47 @@ export function JobList({
           {jobs.map((job) => {
             const jobUrl = safeJobUrl(job.url)
             const cardClassName = cn(
-              "block space-y-2 rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/5 transition-shadow dark:ring-foreground/10",
+              "flex items-center gap-4 rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/5 transition-shadow dark:ring-foreground/10",
               jobUrl && "hover:shadow-md"
             )
             const cardContent = (
               <>
-                <div className="flex items-start justify-between gap-3">
-                  <p className="min-w-0 flex-1 truncate font-heading font-medium">
-                    {job.title ?? "Untitled job"}
-                  </p>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {job.score_matching !== null ? (
-                      <Badge className={matchScoreStyle(job.score_matching)}>
-                        {job.score_matching}% match
-                      </Badge>
-                    ) : null}
+                {job.score_matching !== null ? (
+                  <div
+                    className={cn(
+                      "flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-full",
+                      matchScoreStyle(job.score_matching)
+                    )}
+                  >
+                    <span className="font-heading text-xl leading-none font-bold">
+                      {job.score_matching}
+                      <span className="text-xs font-medium">%</span>
+                    </span>
+                    <span className="text-[10px] leading-none">match</span>
+                  </div>
+                ) : (
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground">
+                    —
+                  </div>
+                )}
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 flex-1 truncate font-heading font-medium">
+                      {job.title ?? "Untitled job"}
+                    </p>
                     <Badge
                       className={cn(
+                        "shrink-0",
                         APPLY_STATUS_STYLES[job.apply_status ?? ""] ?? APPLY_STATUS_STYLES.Dismissed
                       )}
                     >
                       {job.apply_status ?? "New"}
                     </Badge>
                   </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                  <span>{formatAmount(job)}</span>
-                  <span>Scanned {timeAgo(job.inserted_at)}</span>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span>{formatAmount(job)}</span>
+                    <span>Scanned {timeAgo(job.inserted_at)}</span>
+                  </div>
                 </div>
               </>
             )
