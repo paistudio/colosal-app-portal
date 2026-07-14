@@ -75,7 +75,8 @@ export function ScannerList({ items }: { items: ScannerItem[] }) {
       {items.map((item) => (
         <div
           key={item.id}
-          className="flex items-center gap-4 rounded-3xl bg-card px-5 py-4 shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10"
+          onClick={() => router.push(`/job-scanner/${item.id}`)}
+          className="flex cursor-pointer items-center gap-4 rounded-3xl bg-card px-5 py-4 shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10"
         >
           <Badge
             className={cn(
@@ -105,7 +106,10 @@ export function ScannerList({ items }: { items: ScannerItem[] }) {
             <p className="text-xs text-muted-foreground">Total</p>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div
+            className="flex items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Button asChild variant="ghost" size="icon">
               <Link href={`/job-scanner/${item.id}/edit`} aria-label="Edit scanner">
                 <Pencil />
