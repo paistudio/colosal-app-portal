@@ -132,8 +132,8 @@ export default async function ScannerDetailPage({
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="sticky top-0 z-20 bg-background pt-1 pb-4">
-        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 gap-1">
+      <div className="sticky top-0 z-20 flex h-28 flex-col justify-center gap-1 bg-background">
+        <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit gap-1">
           <Link href="/job-scanner">
             <ArrowLeft className="h-4 w-4" /> Back to Job Scanner
           </Link>
@@ -141,7 +141,7 @@ export default async function ScannerDetailPage({
         <h1 className="font-heading text-3xl font-semibold">Scanner Detail</h1>
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
-        <div className="lg:sticky lg:top-6 lg:self-start">
+        <div className="lg:sticky lg:top-28 lg:self-start">
           <ConfigSummary config={configDetail} />
         </div>
         <JobList
