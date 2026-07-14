@@ -132,7 +132,7 @@ export default async function ScannerDetailPage({
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="sticky top-0 z-20 flex h-28 flex-col justify-center gap-1 bg-background">
+      <div className="sticky top-0 z-20 flex h-28 flex-col justify-center gap-1 bg-background will-change-transform">
         <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit gap-1">
           <Link href="/job-scanner">
             <ArrowLeft className="h-4 w-4" /> Back to Job Scanner
