@@ -31,7 +31,14 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  const publicPaths = ["/login", "/signup", "/auth/callback", "/auth/upwork/callback"]
+  const publicPaths = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/auth/callback",
+    "/auth/upwork/callback",
+  ]
   const isPublicPath = publicPaths.some((p) => pathname.startsWith(p))
 
   // Unauthenticated → redirect to login

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { Pencil, Trash2, Loader2, Radar } from "lucide-react"
+import { timeAgo, STATUS_STYLES } from "./scanner-format"
 
 export interface ScannerItem {
   id: string
@@ -17,25 +18,7 @@ export interface ScannerItem {
   status: string
   last_scan: string | null
   todayCount: number
-  totalCount: number
-}
-
-function timeAgo(iso: string | null): string {
-  if (!iso) return "never"
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return "just now"
-  if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`
-  const days = Math.floor(hours / 24)
-  return `${days} day${days === 1 ? "" : "s"} ago`
-}
-
-const STATUS_STYLES: Record<string, string> = {
-  Active: "bg-emerald-500/10 text-emerald-500",
-  Inactive: "bg-muted text-muted-foreground",
-  Draft: "bg-amber-500/10 text-amber-500",
+  weekCount: number
 }
 
 export function ScannerList({ items }: { items: ScannerItem[] }) {
@@ -75,7 +58,8 @@ export function ScannerList({ items }: { items: ScannerItem[] }) {
       {items.map((item) => (
         <div
           key={item.id}
-          className="flex items-center gap-4 rounded-3xl bg-card px-5 py-4 shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10"
+          onClick={() => router.push(`/job-scanner/${item.id}`)}
+          className="flex cursor-pointer items-center gap-4 rounded-3xl bg-card px-5 py-4 shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10"
         >
           <Badge
             className={cn(
@@ -101,11 +85,14 @@ export function ScannerList({ items }: { items: ScannerItem[] }) {
           </div>
 
           <div className="hidden text-center sm:block">
-            <p className="text-lg font-semibold">{item.totalCount}</p>
-            <p className="text-xs text-muted-foreground">Total</p>
+            <p className="text-lg font-semibold">{item.weekCount}</p>
+            <p className="text-xs text-muted-foreground">Last 7 days</p>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div
+            className="flex items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Button asChild variant="ghost" size="icon">
               <Link href={`/job-scanner/${item.id}/edit`} aria-label="Edit scanner">
                 <Pencil />
