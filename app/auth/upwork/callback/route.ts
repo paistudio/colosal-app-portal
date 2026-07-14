@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/onboarding/step-2?error=token_exchange_failed`)
   }
 
-  const { access_token, refresh_token } = await tokenRes.json()
+  const { access_token, refresh_token, expires_in } = await tokenRes.json()
 
   // Store tokens in Supabase
   const supabase = await createClient()
@@ -46,6 +46,7 @@ export async function GET(request: Request) {
     .update({
       access_token,
       refresh_token,
+      expires_at: expires_in ? new Date(Date.now() + expires_in * 1000).toISOString() : null,
       last_used: new Date().toISOString(),
     })
     .eq("user_id", user.id)

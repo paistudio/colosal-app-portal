@@ -1,0 +1,22 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e3]:
+    - link "Colosal" [ref=f1e5] [cursor=pointer]:
+      - /url: /
+      - img "Colosal" [ref=f1e6]
+    - generic [ref=f1e16]:
+      - generic [ref=f1e17]:
+        - generic [ref=f1e18]: Set a new password
+        - generic [ref=f1e19]: Choose a new password for your account
+      - generic [ref=f1e21]:
+        - generic [ref=f1e22]:
+          - generic [ref=f1e23]: New password
+          - textbox "New password" [ref=f1e24]:
+            - /placeholder: ••••••••
+        - generic [ref=f1e25]:
+          - generic [ref=f1e26]: Confirm new password
+          - textbox "Confirm new password" [ref=f1e27]:
+            - /placeholder: ••••••••
+        - button "Update password" [ref=f1e28] [cursor=pointer]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f1e34] [cursor=pointer]:
+    - img [ref=f1e35]

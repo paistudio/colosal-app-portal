@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import { ArrowLeft, ArrowRight, Check, Sparkles, Loader2, Paperclip } from "lucide-react"
-import { SkillTagInput } from "./skill-tag-input"
+import { SkillTagInput, type Skill } from "./skill-tag-input"
 
 const STEPS = ["Filters", "Cover Letter", "Questions", "Attachments", "Notifications"] as const
 
@@ -21,19 +21,6 @@ const EXPERIENCE_LEVELS = [
   { value: "EXPERT", label: "Expert" },
 ]
 
-const CATEGORIES = [
-  "Accounting & Consulting",
-  "Admin Support",
-  "Customer Service",
-  "Data Science & Analytics",
-  "Design & Creative",
-  "Engineering & Architecture",
-  "IT & Networking",
-  "Legal",
-  "Sales & Marketing",
-  "Web, Mobile & Software Dev",
-  "Writing",
-]
 
 export interface ScanConfig {
   id?: string
@@ -44,12 +31,11 @@ export interface ScanConfig {
   budget_max: number | null
   hourly_rate_min: number | null
   hourly_rate_max: number | null
-  skills: string[] | null
+  skills: Skill[] | null
   experience_level: string | null
   category: string | null
   client_hire_rate: number | null
-  cover_letter_ai_instruction: string | null
-  cover_letter_template: string | null
+  proposal_template_id: string | null
   question_instruction: string | null
   question_answer_base: string | null
   attachments: string[] | null
@@ -63,6 +49,7 @@ export interface ScanConfig {
 interface JobOption {
   id: string
   title: string | null
+  description: string | null
 }
 
 interface AttachmentOption {
@@ -71,10 +58,24 @@ interface AttachmentOption {
   description: string | null
 }
 
+interface ProposalTemplate {
+  id: string
+  name: string | null
+  ai_instruction: string | null
+  template: string | null
+}
+
+interface UpworkCategory {
+  id: string
+  preferredLabel: string
+  slug: string
+  subcategories: { id: string; preferredLabel: string }[]
+}
+
 const EMPTY_CONFIG: ScanConfig = {
   name: "",
   keyword: "",
-  contract_type: ["HOURLY"],
+  contract_type: [],
   budget_min: null,
   budget_max: null,
   hourly_rate_min: null,
@@ -83,8 +84,7 @@ const EMPTY_CONFIG: ScanConfig = {
   experience_level: null,
   category: null,
   client_hire_rate: null,
-  cover_letter_ai_instruction: "",
-  cover_letter_template: "",
+  proposal_template_id: null,
   question_instruction: "",
   question_answer_base: "",
   attachments: [],
@@ -140,13 +140,13 @@ function NativeSelect({
     <select
       value={value ?? ""}
       onChange={(e) => onChange(e.target.value)}
-      className="h-9 w-full rounded-3xl border border-transparent bg-input/50 px-3 text-sm outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+      className="h-9 w-full rounded-3xl border border-transparent bg-input/50 px-3 text-sm text-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
     >
-      <option value="" disabled>
+      <option value="" disabled className="bg-popover text-muted-foreground">
         {placeholder}
       </option>
       {options.map((o) => (
-        <option key={o.value} value={o.value}>
+        <option key={o.value} value={o.value} className="bg-popover text-foreground">
           {o.label}
         </option>
       ))}
@@ -169,24 +169,93 @@ export function ScannerForm({ initial }: { initial?: ScanConfig }) {
   const [testJobQ, setTestJobQ] = useState("")
   const [testing, setTesting] = useState<null | "cover" | "question">(null)
   const [testResult, setTestResult] = useState<{ kind: string; text: string } | null>(null)
+  const [templates, setTemplates] = useState<ProposalTemplate[]>([])
+  const selectedTemplate = templates.find((t) => t.id === config.proposal_template_id) ?? null
+  const [creatingTemplate, setCreatingTemplate] = useState(false)
+  const [newTemplateName, setNewTemplateName] = useState("")
+  const [newTemplateInstruction, setNewTemplateInstruction] = useState("")
+  const [newTemplateBody, setNewTemplateBody] = useState("")
+  const [savingTemplate, setSavingTemplate] = useState(false)
+  const [categories, setCategories] = useState<UpworkCategory[]>([])
 
   useEffect(() => {
     async function load() {
-      const { data: jobData } = await supabase
-        .from("upwork_jobs")
-        .select("id, title")
-        .order("inserted_at", { ascending: false })
-        .limit(50)
-      setJobs(jobData ?? [])
-
       const { data: attachData } = await supabase
         .from("attachments")
         .select("id, file_name, description")
         .order("created_at", { ascending: false })
       setAttachmentOptions(attachData ?? [])
+
+      const { data: templateData } = await supabase
+        .from("proposal_templates")
+        .select("id, name, ai_instruction, template")
+        .order("created_at", { ascending: false })
+      setTemplates(templateData ?? [])
+
+      const catRes = await fetch("/api/upwork/categories")
+      const catJson = await catRes.json().catch(() => null)
+      if (catRes.ok) setCategories(catJson?.categories ?? [])
     }
     load()
   }, [supabase])
+
+  useEffect(() => {
+    const keyword = config.keyword?.trim()
+    if (!keyword) {
+      setJobs([])
+      return
+    }
+    const timer = setTimeout(async () => {
+      const res = await fetch(`/api/upwork/jobs-search?keyword=${encodeURIComponent(keyword)}`)
+      const json = await res.json().catch(() => null)
+      if (res.ok) setJobs(json?.jobs ?? [])
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [config.keyword])
+
+  // n8n's marketplace filter uses subcategoryIds_any, which only accepts
+  // subcategory ids — parent category ids are intentionally left out here.
+  const categoryOptions = categories.flatMap((cat) =>
+    cat.subcategories.map((sub) => ({
+      value: sub.id,
+      label: `${cat.preferredLabel} — ${sub.preferredLabel}`,
+    }))
+  )
+
+  async function createTemplate() {
+    if (!newTemplateName.trim() || !newTemplateBody.trim()) {
+      toast.error("Give the template a name and body")
+      return
+    }
+    setSavingTemplate(true)
+    const { data: userData } = await supabase.auth.getUser()
+    if (!userData.user) {
+      router.push("/login")
+      return
+    }
+    const { data, error } = await supabase
+      .from("proposal_templates")
+      .insert({
+        user_id: userData.user.id,
+        name: newTemplateName,
+        ai_instruction: newTemplateInstruction || null,
+        template: newTemplateBody,
+      })
+      .select("id, name, ai_instruction, template")
+      .single()
+    setSavingTemplate(false)
+    if (error || !data) {
+      toast.error(error?.message ?? "Failed to create template")
+      return
+    }
+    setTemplates((t) => [data, ...t])
+    set("proposal_template_id", data.id)
+    setCreatingTemplate(false)
+    setNewTemplateName("")
+    setNewTemplateInstruction("")
+    setNewTemplateBody("")
+    toast.success("Template created")
+  }
 
   function set<K extends keyof ScanConfig>(key: K, value: ScanConfig[K]) {
     setConfig((c) => ({ ...c, [key]: value }))
@@ -202,29 +271,48 @@ export function ScannerForm({ initial }: { initial?: ScanConfig }) {
   const hasHourly = (config.contract_type ?? []).includes("HOURLY")
   const hasFixed = (config.contract_type ?? []).includes("FIXED")
 
-  function runTest(kind: "cover" | "question") {
+  async function runTest(kind: "cover" | "question") {
     const jobId = kind === "cover" ? testJobCL : testJobQ
-    if (!jobId) {
+    const job = jobs.find((j) => j.id === jobId)
+    if (!job) {
       toast.error("Select a job to test with first")
+      return
+    }
+    const base =
+      kind === "cover" ? selectedTemplate?.template ?? "" : config.question_answer_base ?? ""
+    if (!base.trim()) {
+      toast.error(
+        kind === "cover" ? "Select a proposal template above first" : "Add answer knowledge above first"
+      )
       return
     }
     setTesting(kind)
     setTestResult(null)
-    // The AI generation endpoint is wired separately; preview the resolved
-    // template/instructions against the chosen job for now.
-    setTimeout(() => {
-      const job = jobs.find((j) => j.id === jobId)
-      const base =
-        kind === "cover" ? config.cover_letter_template ?? "" : config.question_answer_base ?? ""
+    try {
+      const res = await fetch("/api/ai/generate-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind,
+          jobTitle: job.title,
+          jobDescription: job.description,
+          base,
+          instruction:
+            kind === "cover" ? selectedTemplate?.ai_instruction : config.question_instruction,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? "Generation failed")
       setTestResult({
         kind: kind === "cover" ? "Cover letter" : "Question answer",
-        text: base
-          ? `Preview for "${job?.title ?? "job"}":\n\n${base}`
-          : "Add a template / answer knowledge above, then run the test.",
+        text: json.text,
       })
+      toast.success("Generated")
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
       setTesting(null)
-      toast.success("Generated a preview")
-    }, 600)
+    }
   }
 
   async function handleSubmit(asDraft = false) {
@@ -254,8 +342,7 @@ export function ScannerForm({ initial }: { initial?: ScanConfig }) {
       experience_level: config.experience_level || null,
       category: config.category || null,
       client_hire_rate: config.client_hire_rate ?? 0,
-      cover_letter_ai_instruction: config.cover_letter_ai_instruction || null,
-      cover_letter_template: config.cover_letter_template || null,
+      proposal_template_id: config.proposal_template_id || null,
       question_instruction: config.question_instruction || null,
       question_answer_base: config.question_answer_base || null,
       attachments: config.attachments ?? [],
@@ -434,19 +521,30 @@ export function ScannerForm({ initial }: { initial?: ScanConfig }) {
                 value={config.category}
                 onChange={(v) => set("category", v)}
                 placeholder="Select category"
-                options={CATEGORIES.map((c) => ({ value: c, label: c }))}
+                options={categoryOptions}
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label>Hire Rate</Label>
+              <Label>Hire Rate (%)</Label>
               <Input
                 type="number"
-                placeholder="Input rate"
-                value={config.client_hire_rate ?? ""}
-                onChange={(e) =>
-                  set("client_hire_rate", e.target.value ? Number(e.target.value) : null)
+                min={0}
+                max={100}
+                placeholder="0-100"
+                value={
+                  config.client_hire_rate != null
+                    ? Math.round(config.client_hire_rate * 100 * 1e6) / 1e6
+                    : ""
                 }
+                onChange={(e) => {
+                  if (!e.target.value) {
+                    set("client_hire_rate", null)
+                    return
+                  }
+                  const pct = Math.min(100, Math.max(0, Number(e.target.value)))
+                  set("client_hire_rate", Math.round((pct / 100) * 1e6) / 1e6)
+                }}
               />
             </div>
           </div>
@@ -457,26 +555,88 @@ export function ScannerForm({ initial }: { initial?: ScanConfig }) {
             <h2 className="font-heading text-lg font-medium">Cover Letter</h2>
 
             <div className="space-y-1.5">
-              <Label>
-                AI Instruction <span className="text-muted-foreground">(Optional)</span>
-              </Label>
-              <Textarea
-                rows={4}
-                placeholder="Add any extra instructions to guide the AI — tone, what to emphasize, what to avoid…"
-                value={config.cover_letter_ai_instruction ?? ""}
-                onChange={(e) => set("cover_letter_ai_instruction", e.target.value)}
-              />
+              <div className="flex items-center justify-between">
+                <Label>Proposal template</Label>
+                <button
+                  type="button"
+                  onClick={() => setCreatingTemplate((v) => !v)}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  {creatingTemplate ? "Cancel" : "+ New template"}
+                </button>
+              </div>
+              {templates.length > 0 ? (
+                <NativeSelect
+                  value={config.proposal_template_id}
+                  onChange={(v) => set("proposal_template_id", v)}
+                  placeholder="Select a saved template"
+                  options={templates.map((t) => ({
+                    value: t.id,
+                    label: t.name ?? "Untitled template",
+                  }))}
+                />
+              ) : (
+                !creatingTemplate && (
+                  <p className="text-sm text-muted-foreground">
+                    No templates yet — create one below.
+                  </p>
+                )
+              )}
             </div>
 
-            <div className="space-y-1.5">
-              <Label>Cover letter template</Label>
-              <Textarea
-                rows={8}
-                placeholder="Write your cover letter template. Use [prompt]…[/prompt] for AI-filled sections."
-                value={config.cover_letter_template ?? ""}
-                onChange={(e) => set("cover_letter_template", e.target.value)}
-              />
-            </div>
+            {creatingTemplate && (
+              <div className="space-y-3 rounded-2xl border border-border p-4">
+                <div className="space-y-1.5">
+                  <Label>Template name</Label>
+                  <Input
+                    placeholder="e.g. General web dev pitch"
+                    value={newTemplateName}
+                    onChange={(e) => setNewTemplateName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>
+                    AI Instruction <span className="text-muted-foreground">(Optional)</span>
+                  </Label>
+                  <Textarea
+                    rows={3}
+                    placeholder="Tone, what to emphasize, what to avoid…"
+                    value={newTemplateInstruction}
+                    onChange={(e) => setNewTemplateInstruction(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Cover letter template</Label>
+                  <Textarea
+                    rows={8}
+                    placeholder="Write your cover letter template. Use [prompt]…[/prompt] for AI-filled sections."
+                    value={newTemplateBody}
+                    onChange={(e) => setNewTemplateBody(e.target.value)}
+                  />
+                </div>
+                <Button type="button" onClick={createTemplate} disabled={savingTemplate}>
+                  {savingTemplate ? <Loader2 className="animate-spin" /> : <Check />}
+                  Save template
+                </Button>
+              </div>
+            )}
+
+            {selectedTemplate && !creatingTemplate && (
+              <div className="space-y-3 rounded-2xl bg-muted/50 p-4 text-sm">
+                {selectedTemplate.ai_instruction && (
+                  <div>
+                    <p className="mb-1 text-xs font-medium text-muted-foreground">
+                      AI Instruction
+                    </p>
+                    <p className="whitespace-pre-wrap">{selectedTemplate.ai_instruction}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">Template</p>
+                  <p className="whitespace-pre-wrap">{selectedTemplate.template}</p>
+                </div>
+              </div>
+            )}
 
             <Separator />
 
@@ -656,7 +816,10 @@ export function ScannerForm({ initial }: { initial?: ScanConfig }) {
             </Button>
           )}
           {step < STEPS.length - 1 ? (
-            <Button onClick={() => setStep((s) => s + 1)}>
+            <Button
+              onClick={() => setStep((s) => s + 1)}
+              disabled={step === 0 && (!config.name?.trim() || !config.keyword?.trim())}
+            >
               Continue <ArrowRight />
             </Button>
           ) : (
