@@ -9,12 +9,17 @@ interface SkillResult {
   label: string
 }
 
+export interface Skill {
+  id?: string
+  preferredLabel: string
+}
+
 export function SkillTagInput({
   value,
   onChange,
 }: {
-  value: string[]
-  onChange: (skills: string[]) => void
+  value: Skill[]
+  onChange: (skills: Skill[]) => void
 }) {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<SkillResult[]>([])
@@ -71,11 +76,14 @@ export function SkillTagInput({
     return () => document.removeEventListener("mousedown", onClick)
   }, [])
 
-  function addSkill(label: string) {
-    const trimmed = label.trim()
-    if (!trimmed) return
-    if (!value.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
-      onChange([...value, trimmed])
+  function addSkill(result: SkillResult | string) {
+    const skill: Skill =
+      typeof result === "string"
+        ? { preferredLabel: result.trim() }
+        : { id: result.id, preferredLabel: result.label }
+    if (!skill.preferredLabel) return
+    if (!value.some((s) => s.preferredLabel.toLowerCase() === skill.preferredLabel.toLowerCase())) {
+      onChange([...value, skill])
     }
     setQuery("")
     setResults([])
@@ -83,22 +91,22 @@ export function SkillTagInput({
   }
 
   function removeSkill(label: string) {
-    onChange(value.filter((s) => s !== label))
+    onChange(value.filter((s) => s.preferredLabel !== label))
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Backspace" && !query && value.length) {
-      removeSkill(value[value.length - 1])
+      removeSkill(value[value.length - 1].preferredLabel)
     }
     if (e.key === "Enter") {
       e.preventDefault()
-      if (results.length) addSkill(results[0].label)
+      if (results.length) addSkill(results[0])
       else if (query.trim()) addSkill(query)
     }
   }
 
   const available = results.filter(
-    (r) => !value.some((s) => s.toLowerCase() === r.label.toLowerCase())
+    (r) => !value.some((s) => s.preferredLabel.toLowerCase() === r.label.toLowerCase())
   )
 
   return (
@@ -110,15 +118,15 @@ export function SkillTagInput({
       >
         {value.map((skill) => (
           <span
-            key={skill}
+            key={skill.id ?? skill.preferredLabel}
             className="inline-flex items-center gap-1 rounded-full bg-primary/15 py-0.5 pl-2.5 pr-1 text-xs font-medium text-foreground"
           >
-            {skill}
+            {skill.preferredLabel}
             <button
               type="button"
-              onClick={() => removeSkill(skill)}
+              onClick={() => removeSkill(skill.preferredLabel)}
               className="rounded-full p-0.5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
-              aria-label={`Remove ${skill}`}
+              aria-label={`Remove ${skill.preferredLabel}`}
             >
               <X className="h-3 w-3" />
             </button>

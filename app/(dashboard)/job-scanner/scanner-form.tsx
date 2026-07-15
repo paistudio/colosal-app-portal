@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import { ArrowLeft, ArrowRight, Check, Sparkles, Loader2, Paperclip } from "lucide-react"
-import { SkillTagInput } from "./skill-tag-input"
+import { SkillTagInput, type Skill } from "./skill-tag-input"
 
 const STEPS = ["Filters", "Cover Letter", "Questions", "Attachments", "Notifications"] as const
 
@@ -44,7 +44,7 @@ export interface ScanConfig {
   budget_max: number | null
   hourly_rate_min: number | null
   hourly_rate_max: number | null
-  skills: string[] | null
+  skills: Skill[] | null
   experience_level: string | null
   category: string | null
   client_hire_rate: number | null
