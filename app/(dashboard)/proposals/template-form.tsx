@@ -39,9 +39,19 @@ export function TemplateForm({ initial }: { initial?: TemplateFormData }) {
       ai_instruction: form.ai_instruction,
     }
 
-    const { error } = form.id
-      ? await supabase.from("proposal_templates").update(payload).eq("id", form.id)
-      : await supabase.from("proposal_templates").insert(payload)
+    let error
+    if (form.id) {
+      ;({ error } = await supabase.from("proposal_templates").update(payload).eq("id", form.id))
+    } else {
+      const { data: userData } = await supabase.auth.getUser()
+      if (!userData.user) {
+        router.push("/login")
+        return
+      }
+      ;({ error } = await supabase
+        .from("proposal_templates")
+        .insert({ ...payload, user_id: userData.user.id }))
+    }
 
     if (error) {
       toast.error(error.message)

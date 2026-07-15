@@ -27,10 +27,14 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false)
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    toast.success("Copied")
-    setTimeout(() => setCopied(false), 1500)
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      toast.success("Copied")
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      toast.error("Copy failed")
+    }
   }
 
   return (
