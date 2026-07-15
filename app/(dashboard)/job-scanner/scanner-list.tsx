@@ -29,7 +29,10 @@ export function ScannerList({ items }: { items: ScannerItem[] }) {
   async function handleDelete(id: string) {
     setDeleting(id)
     const supabase = createClient()
-    const { error } = await supabase.from("user_scan_config").delete().eq("id", id)
+    const { error } = await supabase
+      .from("user_scan_config")
+      .update({ is_archived: true, status: "Inactive" })
+      .eq("id", id)
     if (error) {
       toast.error(error.message)
       setDeleting(null)
