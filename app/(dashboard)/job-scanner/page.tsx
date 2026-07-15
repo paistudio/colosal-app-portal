@@ -10,7 +10,7 @@ export default async function JobScannerPage() {
   const { data: configs } = await supabase
     .from("user_scan_config")
     .select(
-      "id, name, keyword, status, last_scan, contract_type, budget_min, budget_max, hourly_rate_min, hourly_rate_max, skills, experience_level, category, client_hire_rate, cover_letter_ai_instruction, cover_letter_template, question_instruction, question_answer_base, attachments, notif_email, email, notif_whatsapp, whatsapp"
+      "id, name, keyword, status, last_scan, contract_type, budget_min, budget_max, hourly_rate_min, hourly_rate_max, skills, experience_level, category, client_hire_rate, question_instruction, question_answer_base, attachments, notif_email, email, notif_whatsapp, whatsapp"
     )
     .eq("is_archived", false)
     .order("created_at", { ascending: false })
