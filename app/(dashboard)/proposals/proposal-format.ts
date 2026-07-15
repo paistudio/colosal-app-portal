@@ -7,3 +7,8 @@ export function formatProposalDate(date: string | null): string {
   if (!date) return "—"
   return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(date))
 }
+
+export function formatProposalDateTime(date: string | null): string {
+  if (!date) return "—"
+  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(date))
+}

@@ -16,6 +16,17 @@ function parseQA(raw: unknown): QAPair[] {
   )
 }
 
+function parseSkills(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((s) => {
+      if (typeof s === "string") return s
+      const obj = s as { preferredLabel?: string; label?: string }
+      return obj?.preferredLabel ?? obj?.label ?? null
+    })
+    .filter((s): s is string => Boolean(s))
+}
+
 function formatAmount(job: {
   contract_type: string | null
   fixed_price_amount: number | null
@@ -43,7 +54,7 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
   const { data: proposal } = await supabase
     .from("proposals")
     .select(
-      "id, cover_letter_generated, question_answer, job:upwork_jobs(title, url, scan_config_id, contract_type, fixed_price_amount, fixed_price_currency, hourly_budget_min, hourly_budget_max)"
+      "id, cover_letter_generated, question_answer, is_submitted, last_generated_at, connects_used, attachment, job:upwork_jobs(title, url, description, contract_type, fixed_price_amount, fixed_price_currency, hourly_budget_min, hourly_budget_max, skills, client_country, publish_time, scan_config_id, scan_config:user_scan_config(name))"
     )
     .eq("id", id)
     .single()
@@ -53,24 +64,44 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
   const job = proposal.job as unknown as {
     title: string | null
     url: string | null
-    scan_config_id: string | null
+    description: string | null
     contract_type: string | null
     fixed_price_amount: number | null
     fixed_price_currency: string | null
     hourly_budget_min: number | null
     hourly_budget_max: number | null
+    skills: unknown
+    client_country: string | null
+    publish_time: string | null
+    scan_config_id: string | null
+    scan_config: { name: string | null } | null
   } | null
+
+  const attachmentIds = Array.isArray(proposal.attachment) ? proposal.attachment : []
+  const { data: attachmentRows } =
+    attachmentIds.length > 0
+      ? await supabase.from("attachments").select("id, file_name").in("id", attachmentIds)
+      : { data: [] }
 
   const detail: ProposalDetailData = {
     id: proposal.id,
+    is_submitted: proposal.is_submitted,
+    last_generated_at: proposal.last_generated_at,
+    connects_used: proposal.connects_used,
     cover_letter_generated: proposal.cover_letter_generated,
     question_answer: parseQA(proposal.question_answer),
+    attachments: (attachmentRows ?? []).map((a) => ({ id: a.id, file_name: a.file_name })),
     job: job
       ? {
           title: job.title,
           url: job.url,
+          description: job.description,
           scan_config_id: job.scan_config_id,
+          scan_config_name: job.scan_config?.name ?? null,
           amount: formatAmount(job),
+          posted: job.publish_time,
+          client_country: job.client_country,
+          skills: parseSkills(job.skills),
         }
       : null,
   }
