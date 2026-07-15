@@ -11,7 +11,7 @@ import { toast } from "sonner"
 
 type Profile = {
   username: string
-  whatsapp: string
+  phone: string
   summary: string
   current_role: string
   previous_experience: string
@@ -35,7 +35,7 @@ const PROFILE_FIELDS: { key: keyof Profile; label: string; description: string; 
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState<Profile>({
-    username: "", whatsapp: "",
+    username: "", phone: "",
     summary: "", current_role: "", previous_experience: "",
     skills_text: "", portfolio: "", key_proof_points: "", positioning_notes: "",
     access_token: null, last_used: null,
@@ -52,7 +52,7 @@ export default function SettingsPage() {
       setEmail(user.email ?? "")
       const { data } = await supabase
         .from("user_profiles")
-        .select("username, whatsapp, summary, current_role, previous_experience, skills_text, portfolio, key_proof_points, positioning_notes, access_token, last_used")
+        .select("username, phone, summary, current_role, previous_experience, skills_text, portfolio, key_proof_points, positioning_notes, access_token, last_used")
         .eq("user_id", user.id)
         .single()
       if (data) setProfile(data as Profile)
@@ -74,7 +74,7 @@ export default function SettingsPage() {
       .from("user_profiles")
       .update({
         username: profile.username,
-        whatsapp: profile.whatsapp,
+        phone: profile.phone,
         summary: profile.summary,
         current_role: profile.current_role,
         previous_experience: profile.previous_experience,
@@ -140,11 +140,11 @@ export default function SettingsPage() {
           <p className="text-xs text-muted-foreground">Email cannot be changed here</p>
         </div>
         <div className="space-y-1">
-          <Label htmlFor="whatsapp">WhatsApp number</Label>
+          <Label htmlFor="phone">WhatsApp number</Label>
           <Input
-            id="whatsapp"
-            value={profile.whatsapp ?? ""}
-            onChange={(e) => update("whatsapp", e.target.value)}
+            id="phone"
+            value={profile.phone ?? ""}
+            onChange={(e) => update("phone", e.target.value)}
             placeholder="+1 555 000 0000"
           />
         </div>

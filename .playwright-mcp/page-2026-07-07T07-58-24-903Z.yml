@@ -1,0 +1,23 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e48]:
+    - link "Colosal" [ref=e50] [cursor=pointer]:
+      - /url: /
+      - img "Colosal" [ref=e51]
+    - generic [ref=e61]:
+      - generic [ref=e62]:
+        - generic [ref=e63]: Reset your password
+        - generic [ref=e64]: Enter your email and we'll send you a reset link
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - generic [ref=e68]: Email
+          - textbox "Email" [ref=e69]:
+            - /placeholder: you@example.com
+        - button "Send reset link" [ref=e70] [cursor=pointer]
+      - paragraph [ref=e72]:
+        - text: Remembered your password?
+        - link "Sign in" [ref=e73] [cursor=pointer]:
+          - /url: /login
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e42] [cursor=pointer]:
+    - img [ref=e43]
+  - alert [ref=e46]

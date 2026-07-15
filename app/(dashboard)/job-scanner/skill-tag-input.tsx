@@ -10,7 +10,7 @@ interface SkillResult {
 }
 
 export interface Skill {
-  id?: string
+  id: string
   preferredLabel: string
 }
 
@@ -76,22 +76,19 @@ export function SkillTagInput({
     return () => document.removeEventListener("mousedown", onClick)
   }, [])
 
-  function addSkill(result: SkillResult | string) {
-    const skill: Skill =
-      typeof result === "string"
-        ? { preferredLabel: result.trim() }
-        : { id: result.id, preferredLabel: result.label }
-    if (!skill.preferredLabel) return
-    if (!value.some((s) => s.preferredLabel.toLowerCase() === skill.preferredLabel.toLowerCase())) {
-      onChange([...value, skill])
+  function addSkill(skill: Skill) {
+    const label = skill.preferredLabel.trim()
+    if (!label) return
+    if (!value.some((s) => s.preferredLabel.toLowerCase() === label.toLowerCase())) {
+      onChange([...value, { ...skill, preferredLabel: label }])
     }
     setQuery("")
     setResults([])
     setOpen(false)
   }
 
-  function removeSkill(label: string) {
-    onChange(value.filter((s) => s.preferredLabel !== label))
+  function removeSkill(preferredLabel: string) {
+    onChange(value.filter((s) => s.preferredLabel !== preferredLabel))
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -100,8 +97,8 @@ export function SkillTagInput({
     }
     if (e.key === "Enter") {
       e.preventDefault()
-      if (results.length) addSkill(results[0])
-      else if (query.trim()) addSkill(query)
+      if (results.length) addSkill({ id: results[0].id, preferredLabel: results[0].label })
+      else if (query.trim()) addSkill({ id: "", preferredLabel: query })
     }
   }
 
@@ -118,7 +115,7 @@ export function SkillTagInput({
       >
         {value.map((skill) => (
           <span
-            key={skill.id ?? skill.preferredLabel}
+            key={skill.preferredLabel}
             className="inline-flex items-center gap-1 rounded-full bg-primary/15 py-0.5 pl-2.5 pr-1 text-xs font-medium text-foreground"
           >
             {skill.preferredLabel}
@@ -152,7 +149,7 @@ export function SkillTagInput({
               <button
                 key={r.id}
                 type="button"
-                onClick={() => addSkill(r.label)}
+                onClick={() => addSkill({ id: r.id, preferredLabel: r.label })}
                 className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm hover:bg-muted"
               >
                 {r.label}

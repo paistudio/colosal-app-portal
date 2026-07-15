@@ -118,7 +118,7 @@ export default function OnboardingStep3() {
     setFields((prev) => ({ ...prev, [key]: value }))
   }
 
-  async function handleSave(complete: boolean) {
+  async function handleSave() {
     setLoading(true)
     setError(null)
     const supabase = createClient()
@@ -129,7 +129,7 @@ export default function OnboardingStep3() {
     }
     const { error } = await supabase
       .from("user_profiles")
-      .update({ ...fields, onboarding_completed: complete })
+      .update({ ...fields, onboarding_completed: true })
       .eq("user_id", user.id)
     if (error) {
       setError(error.message)
@@ -172,7 +172,7 @@ export default function OnboardingStep3() {
         <div className="flex flex-col gap-3">
           <Button
             className="w-full"
-            onClick={() => handleSave(true)}
+            onClick={() => handleSave()}
             disabled={loading || prefilling}
           >
             {loading ? "Saving…" : "Save & go to dashboard"}
@@ -180,7 +180,7 @@ export default function OnboardingStep3() {
           <Button
             variant="ghost"
             className="w-full text-muted-foreground"
-            onClick={() => handleSave(false)}
+            onClick={() => handleSave()}
             disabled={loading || prefilling}
           >
             Skip for now — complete later in Settings

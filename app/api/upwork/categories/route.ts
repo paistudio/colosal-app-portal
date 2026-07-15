@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
-import { fetchUpworkWithAuth } from "@/lib/upwork/token"
+import { fetchUpworkCategories } from "@/lib/upwork/categories"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { data: profile } = await supabase
@@ -17,21 +19,12 @@ export async function GET() {
     return NextResponse.json({ error: "Upwork not connected" }, { status: 400 })
   }
 
-  const res = await fetchUpworkWithAuth(
+  const categories = await fetchUpworkCategories(
     supabase,
     user.id,
     profile.access_token,
-    profile.refresh_token,
-    (token) =>
-      fetch("https://www.upwork.com/api/v3/freelancers/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    profile.refresh_token
   )
 
-  if (!res.ok) {
-    return NextResponse.json({ error: "Failed to fetch Upwork profile" }, { status: 502 })
-  }
-
-  const data = await res.json()
-  return NextResponse.json(data)
+  return NextResponse.json({ categories })
 }

@@ -27,12 +27,23 @@ export default async function EditScannerPage({
     budget_max: config.budget_max,
     hourly_rate_min: config.hourly_rate_min,
     hourly_rate_max: config.hourly_rate_max,
-    skills: Array.isArray(config.skills) ? config.skills : [],
+    skills: Array.isArray(config.skills)
+      ? config.skills
+          .map((s: unknown) => {
+            if (typeof s === "string") return { id: "", preferredLabel: s }
+            const obj = s as { id?: string; preferredLabel?: string; label?: string }
+            const preferredLabel = obj?.preferredLabel ?? obj?.label ?? ""
+            return preferredLabel ? { id: obj?.id ?? "", preferredLabel } : null
+          })
+          .filter(
+            (s: { id: string; preferredLabel: string } | null): s is { id: string; preferredLabel: string } =>
+              s !== null
+          )
+      : [],
     experience_level: config.experience_level,
     category: config.category,
     client_hire_rate: config.client_hire_rate,
-    cover_letter_ai_instruction: config.cover_letter_ai_instruction,
-    cover_letter_template: config.cover_letter_template,
+    proposal_template_id: config.proposal_template_id,
     question_instruction: config.question_instruction,
     question_answer_base: config.question_answer_base,
     attachments: Array.isArray(config.attachments) ? config.attachments : [],
