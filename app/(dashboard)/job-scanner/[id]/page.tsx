@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation"
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
+import { fetchUpworkCategories } from "@/lib/upwork/categories"
+import { Button } from "@/components/ui/button"
 import { ConfigSummary, type ScanConfigDetail } from "./config-summary"
-import { JobList, type ApplyStatusTab, type JobRow } from "./job-list"
+import { JobList, JobListTabs, type ApplyStatusTab, type JobRow } from "./job-list"
 
 const PAGE_SIZE = 20
 const TABS: ApplyStatusTab[] = ["All", "New", "Applied", "Dismissed"]
@@ -30,6 +34,33 @@ export default async function ScannerDetailPage({
     .single()
 
   if (!config) notFound()
+
+  let categoryLabel: string | null = config.category
+  if (config.category) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    const { data: profile } = user
+      ? await supabase
+          .from("user_profiles")
+          .select("access_token, refresh_token")
+          .eq("user_id", user.id)
+          .single()
+      : { data: null }
+
+    if (user && profile?.access_token) {
+      const categories = await fetchUpworkCategories(
+        supabase,
+        user.id,
+        profile.access_token,
+        profile.refresh_token
+      )
+      const match = categories
+        .flatMap((cat) => cat.subcategories)
+        .find((sub) => sub.id === config.category)
+      if (match) categoryLabel = match.preferredLabel
+    }
+  }
 
   const baseQuery = supabase.from("upwork_jobs").select("id", { count: "exact", head: true }).eq("scan_config_id", id)
 
@@ -65,7 +96,7 @@ export default async function ScannerDetailPage({
   let jobsQuery = supabase
     .from("upwork_jobs")
     .select(
-      "id, title, contract_type, fixed_price_amount, fixed_price_currency, hourly_budget_min, hourly_budget_max, inserted_at, score_matching, apply_status"
+      "id, title, url, contract_type, fixed_price_amount, fixed_price_currency, hourly_budget_min, hourly_budget_max, inserted_at, score_matching, apply_status"
     )
     .eq("scan_config_id", id)
     .order("inserted_at", { ascending: false })
@@ -82,7 +113,7 @@ export default async function ScannerDetailPage({
     name: config.name,
     status: config.status,
     keyword: config.keyword,
-    category: config.category,
+    category: categoryLabel,
     experience_level: config.experience_level,
     contract_type: config.contract_type,
     budget_min: config.budget_min,
@@ -100,21 +131,32 @@ export default async function ScannerDetailPage({
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <h1 className="mb-6 font-heading text-3xl font-semibold">Scanner Detail</h1>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
-        <div className="lg:sticky lg:top-6 lg:self-start">
-          <ConfigSummary config={configDetail} />
+    <div className="flex h-full flex-col">
+      <div className="mx-auto w-full max-w-6xl shrink-0 pb-4">
+        <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit gap-1">
+          <Link href="/job-scanner">
+            <ArrowLeft className="h-4 w-4" /> Back to Job Scanner
+          </Link>
+        </Button>
+        <h1 className="mb-2 font-heading text-3xl font-semibold">Scanner Detail</h1>
+        <JobListTabs scanConfigId={id} counts={counts} activeTab={activeTab} />
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid grid-cols-1 gap-6 pb-6 lg:grid-cols-[340px_1fr]">
+            <div className="lg:sticky lg:top-0 lg:self-start">
+              <ConfigSummary config={configDetail} />
+            </div>
+            <JobList
+              scanConfigId={id}
+              jobs={(jobRows ?? []) as JobRow[]}
+              activeTab={activeTab}
+              page={clampedPage}
+              pageSize={PAGE_SIZE}
+              activeTabTotal={counts[activeTab]}
+            />
+          </div>
         </div>
-        <JobList
-          scanConfigId={id}
-          jobs={(jobRows ?? []) as JobRow[]}
-          counts={counts}
-          activeTab={activeTab}
-          page={clampedPage}
-          pageSize={PAGE_SIZE}
-          activeTabTotal={counts[activeTab]}
-        />
       </div>
     </div>
   )
